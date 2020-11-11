@@ -103,28 +103,29 @@ export default class App extends Component {
 		const maxRange = Math.max(this.state[BOARD.COL_SIZE],this.state[BOARD.ROW_SIZE])	// Get max length of board to calculate movement range
 		if([PIECE.POP.NAME,PIECE.MERCHANT.NAME].includes(piece.NAME)){
 			return [
-				...this.addRange([coords],1),
-				...this.checkRangeBoundary(this.checkLeapPieces(this.addRange([coords],1),[PIECE.POP,PIECE.MERCHANT,PIECE.ASSASSIN])),
+				...this.checkRangeBoundary(this.addRange([coords],1)),	// Basic range of 1
+				...this.checkRangeBoundary(this.checkLeapPieces(this.addRange([coords],1),[PIECE.POP,PIECE.MERCHANT,PIECE.ASSASSIN])),	// Can leap over adjacent Court pieces
 			].map(coords=>arr2an(coords)).filter(an=>!occupiedTiles.includes(an))
 		}
 		if(piece.NAME===PIECE.KING.NAME){
 			const ediblePieces = pieces.filter(piece=>piece.NAME!==PIECE.KNIGHT.NAME).map(piece=>piece.an)	// Kings can capture anything but Knights
 			return [
-				[coords[0],coords[1]-1],
-				[coords[0],coords[1]+1],
+				[coords[0],coords[1]-1],	// Can move up
+				[coords[0],coords[1]+1],	// Can move down
 			].map(coords=>arr2an(coords)).filter(an=>!occupiedTiles.includes(an)||ediblePieces.includes(an))
 		}
 		if(piece.NAME===PIECE.KNIGHT.NAME){
 			const ediblePieces = pieces.filter(piece=>piece.NAME!==PIECE.KING.NAME).map(piece=>piece.an)	// Knights can capture anything but Kings
 			return [
-				...this.checkRangePieces(this.checkRangeBoundary(this.addRange([coords],maxRange))),
+				...this.checkRangePieces(this.checkRangeBoundary(this.addRange([coords],maxRange))),	// Moves like a QUEEN
 			].map(coords=>arr2an(coords)).filter(an=>!occupiedTiles.includes(an)||ediblePieces.includes(an))
 		}
 		if(piece.NAME===PIECE.ASSASSIN.NAME){
 			const ediblePieces = pieces.filter(piece=>[PIECE.POP.NAME,PIECE.MERCHANT.NAME,PIECE.KING.NAME].includes(piece.NAME)).map(piece=>piece.an)	// Assassins can Kings and swap with Court pieces
 			return [
-				...this.checkRangePieces(this.checkRangeBoundary(this.addRange([coords],maxRange))),
-				...this.checkRangeBoundary(this.checkLeapPieces(this.addRange([coords],1))),
+				...this.checkRangeBoundary(this.addRange([coords],1)),	// Basic range of 1
+				...this.checkRangeBoundary(this.checkLeapPieces(this.addRange([coords],1))),	// Can leap over adjacent Court pieces
+				...this.checkSwapPieces(this.checkRangeBoundary(this.addRange([coords],maxRange)),[PIECE.POP,PIECE.MERCHANT,PIECE.ASSASSIN])	// Can swap with Court pieces in range
 			].map(coords=>arr2an(coords)).filter(an=>!occupiedTiles.includes(an)||ediblePieces.includes(an))
 		}
 		return []
@@ -223,6 +224,7 @@ export default class App extends Component {
 	/**
 	 * Truncates array of coords to the first encountered piece per direction and add +1 range in that direction (to simulate leaping)
 	 * @param {[[]]} coords [[x,y],[x,y],...] initial list of coordinates
+	 * @param {[]} allowedPieces [{}] list of valid pieces to leap over
 	 */
 	checkLeapPieces = (coords,allowedPieces) => {
 		allowedPieces = allowedPieces || []
@@ -286,6 +288,72 @@ export default class App extends Component {
 				newCoord
 			]
 		},[]).filter(coord=>coord)	// Retain only valid coordinates
+
+		return rangeCoordsTruncated.map(coord=>[coord[0]+coords[0][0],coord[1]+coords[0][1]])	// De-normalize valid range taking center piece as origin
+	}
+
+	/**
+	 * Truncates array of coords to the first encountered piece in range per direction
+	 * @param {[[]]} coords [[x,y],[x,y],...] initial list of coordinates
+	 * @param {[]} allowedPieces [{}] list of valid pieces to leap over
+	 */
+	checkSwapPieces = (coords,allowedPieces) => {
+		allowedPieces = allowedPieces || []
+
+		const {pieces} = this.state
+		const coordsAN = coords.map(coord=>arr2an(coord))	// Convert coords into list of AN
+		const piecesAllowed = pieces.filter(piece=>allowedPieces.some(allowed=>allowed.NAME===piece.NAME))
+		const piecesInRange = piecesAllowed.filter(piece=>coords.some(coord=>arr2an(coord)===piece.an))
+		const piecesCoords = piecesInRange.map(piece=>piece.an).filter(an=>coordsAN.includes(an)).map(an=>an2arr(an))	// Take only pieces within range of center piece
+		const piecesCoordsNormalized = piecesCoords.map(coord=>[coord[0]-coords[0][0],coord[1]-coords[0][1]])	// Normalize pieces coords taking center piece as (0,0)
+
+		// Truncate range
+		const rangeCoordsTruncated = piecesCoordsNormalized.filter(coord=>{
+			// Filter x-axis coords	[0,y]
+			if(!coord[0] && coord[1]){
+				let piecesCol = piecesCoordsNormalized.filter(coord=>!coord[0])	// x-axis pieces
+				if(coord[1]>0){
+					piecesCol = piecesCol.filter(coord=>coord[1]>0)
+					return piecesCol.every(piece=>coord[1]<=piece[1])
+				}
+				if(coord[1]<0){
+					piecesCol = piecesCol.filter(coord=>coord[1]<0)
+					return piecesCol.every(piece=>coord[1]>=piece[1])
+				}
+			}
+			// Filter y-axis coords [x,0]
+			if(coord[0] && !coord[1]){
+				let piecesRow = piecesCoordsNormalized.filter(coord=>!coord[1])	// y-axis pieces
+				if(coord[0]>0){
+					piecesRow = piecesRow.filter(coord=>coord[0]>0)
+					return piecesRow.every(piece=>coord[0]<=piece[0])
+				}
+				if(coord[0]<0){
+					piecesRow = piecesRow.filter(coord=>coord[0]<0)
+					return piecesRow.every(piece=>coord[0]>=piece[0])
+				}
+			}
+			// Filter diagonal pieces
+			let piecesDiag = piecesCoordsNormalized.filter(coord=>coord[0]&&coord[1])	// diagonal pieces
+			if(coord[0]>0 && coord[1]>0){
+				piecesDiag = piecesDiag.filter(coord=>coord[0]>0 && coord[1]>0)
+				return piecesDiag.every(piece=>coord[0]<=piece[0] && coord[1]<=piece[1])
+			}
+			if(coord[0]>0 && coord[1]<0){
+				piecesDiag = piecesDiag.filter(coord=>coord[0]>0 && coord[1]<0)
+				return piecesDiag.every(piece=>coord[0]<=piece[0] && coord[1]>=piece[1])
+			}
+			if(coord[0]<0 && coord[1]>0){
+				piecesDiag = piecesDiag.filter(coord=>coord[0]<0 && coord[1]>0)
+				return piecesDiag.every(piece=>coord[0]>=piece[0] && coord[1]<=piece[1])
+			}
+			if(coord[0]<0 && coord[1]<0){
+				piecesDiag = piecesDiag.filter(coord=>coord[0]<0 && coord[1]<0)
+				return piecesDiag.every(piece=>coord[0]>=piece[0] && coord[1]>=piece[1])
+			}
+			return false
+		})
+
 
 		return rangeCoordsTruncated.map(coord=>[coord[0]+coords[0][0],coord[1]+coords[0][1]])	// De-normalize valid range taking center piece as origin
 	}

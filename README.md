@@ -41,9 +41,11 @@
 		1. Capture the King piece.
 		2. Trick the Royal player into capturing a non-Assassin piece.
 
-- Notes:
-	- Knowledge is valuable for the Royal player. Balance gameplay on this principle.
-	- P2P networking to be added in later. WebRTC probably.
+## Notes
+
+- Knowledge is valuable to the Royal player. Balance gameplay on this principle.
+- P2P networking to be added in later. WebRTC probably.
+- Set a few test scenarios.
 
 ## Built with Create React App
 

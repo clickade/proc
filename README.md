@@ -25,7 +25,7 @@
 			- x01 King
 			- x02 Knights
 		2. Court player
-			- x02 Assassins (positions always unknown to Court player, looks like a Pop)
+			- x02 Assassins (positions always unknown to Court player, looks like a Pop to them)
 			- x0N Pops, depending on size of the board.
 			- x0N Merchants, depending on size of the board.
 
@@ -40,6 +40,27 @@
 	- Court player win conditions:
 		1. Capture the King piece.
 		2. Trick the Royal player into capturing a non-Assassin piece.
+
+- Piece rules:
+
+	``` Each tile can only hold one piece. Pieces either move into an empty tile or capture the occupant piece if permitted. ```
+
+	- King:
+		1. Move one tile vertically.
+		2. Leap over one Knight onto an empty tile.
+		3. Can capture any Court piece.
+
+	- Knight:
+		1. Move any number of tiles laterally or diagonally. Cannot leap over other pieces this way.
+		2. Can capture any Court piece.
+
+	- Pop / Merchant:
+		1. Move one tile laterally or diagonally. Can leap over one other Court piece this way.
+
+	- Assassin:
+		1. Move one tile laterally or diagonally. Can leap over one other Court piece this way. Can capture the King this way.
+		2. Can swap positions with another Court piece directly laterally or diagonally opposite itself. No range limit to this swap.
+		3. If a King is positioned laterally or diagonally in between two Assassins, the King is captured.
 
 ## Notes
 

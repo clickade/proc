@@ -124,7 +124,7 @@ export default class App extends Component {
 			const ediblePieces = pieces.filter(piece=>[PIECE.POP.NAME,PIECE.MERCHANT.NAME,PIECE.KING.NAME].includes(piece.NAME)).map(piece=>piece.an)	// Assassins can Kings and swap with Court pieces
 			return [
 				...this.checkRangeBoundary(this.addRange([coords],1)),	// Basic range of 1
-				...this.checkRangeBoundary(this.checkLeapPieces(this.addRange([coords],1))),	// Can leap over adjacent Court pieces
+				...this.checkRangeBoundary(this.checkLeapPieces(this.addRange([coords],1),[PIECE.POP,PIECE.MERCHANT,PIECE.ASSASSIN])),	// Can leap over adjacent Court pieces
 				...this.checkSwapPieces(this.checkRangeBoundary(this.addRange([coords],maxRange)),[PIECE.POP,PIECE.MERCHANT,PIECE.ASSASSIN])	// Can swap with Court pieces in range
 			].map(coords=>arr2an(coords)).filter(an=>!occupiedTiles.includes(an)||ediblePieces.includes(an))
 		}

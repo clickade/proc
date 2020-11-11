@@ -30,8 +30,8 @@
 			- x0N Merchants, depending on size of the board.
 
 	- Players take alternate turns:
-		- Royal player makes 2 moves during their turn.
-		- Court player makes 1 move and converts a Pop into a Mechant (Revealing that it isn't an Assassin)
+		- Royal player moves 2 different pieces during their turn.
+		- Court player moves 1 piece and converts a Pop into a Mechant (Revealing that it isn't an Assassin).
 
 	- Royal player win conditions:
 		1. Move the King piece onto E1.

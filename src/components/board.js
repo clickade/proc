@@ -6,7 +6,7 @@ import {num2Alpha} from './global'
  * Renders the board
  * @param {*} param0
  */
-export const GameBoard = ({rowSize,colSize,pieces,legalMoves,handleDragStart,handleDragOver,handleDrop}) => {
+export const GameBoard = ({rowSize,colSize,pieces,legalMoves,handleDragStart,handleDragOver,handleDrop,handleDoubleClick}) => {
 	const boardState = rowSize && colSize ? new Array(rowSize).fill(new Array(colSize).fill(0)) : undefined
 	if(!boardState || !pieces) return null
 
@@ -43,6 +43,7 @@ export const GameBoard = ({rowSize,colSize,pieces,legalMoves,handleDragStart,han
 									onDragStart={handleDragStart}
 									color={color}
 									draggable
+									onDoubleClick={handleDoubleClick}
 								>{gamePieces[an].SYMBOL}</Piece>
 							: <Piece data-tile={JSON.stringify({an,piece:gamePieces[an]})}  color={'rgba(255,255,255,.1)'}>{false && an}</Piece>}
 						</Tile>

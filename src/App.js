@@ -427,6 +427,28 @@ export default class App extends Component {
 		})
 	}
 
+	/**
+	 * Logic executing conversion of pieces
+	 * @param {*} e
+	 */
+	handleDoubleClick = e => {
+		const targetPiece = JSON.parse(e.target.getAttribute('data-piece'))
+
+		if(targetPiece.NAME === PIECE.POP.NAME){
+			const {pieces} = this.state
+			this.setState({
+				pieces: [
+					...pieces.filter(piece=>piece.an!==targetPiece.an),
+					{
+						...PIECE.MERCHANT,
+						index: targetPiece.index,
+						an: targetPiece.an
+					}
+				]
+			})
+		}
+	}
+
 	render(){
 		const {pieces,legalMoves} = this.state
 		return <div>
@@ -438,7 +460,8 @@ export default class App extends Component {
 					pieces, legalMoves,
 					handleDragOver: this.handleDragOver,
 					handleDragStart: this.handleDragStart,
-					handleDrop: this.handleDrop
+					handleDrop: this.handleDrop,
+					handleDoubleClick: this.handleDoubleClick
 				}}/>
 		</div>
 	}

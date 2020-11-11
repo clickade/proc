@@ -104,7 +104,7 @@ export default class App extends Component {
 		if([PIECE.POP.NAME,PIECE.MERCHANT.NAME].includes(piece.NAME)){
 			return [
 				...this.addRange([coords],1),
-				...this.checkRangeBoundary(this.checkLeapPieces(this.addRange([coords],1))),
+				...this.checkRangeBoundary(this.checkLeapPieces(this.addRange([coords],1),[PIECE.POP,PIECE.MERCHANT,PIECE.ASSASSIN])),
 			].map(coords=>arr2an(coords)).filter(an=>!occupiedTiles.includes(an))
 		}
 		if(piece.NAME===PIECE.KING.NAME){
@@ -224,10 +224,13 @@ export default class App extends Component {
 	 * Truncates array of coords to the first encountered piece per direction and add +1 range in that direction (to simulate leaping)
 	 * @param {[[]]} coords [[x,y],[x,y],...] initial list of coordinates
 	 */
-	checkLeapPieces = coords => {
+	checkLeapPieces = (coords,allowedPieces) => {
+		allowedPieces = allowedPieces || []
+
 		const {pieces} = this.state
 		const coordsAN = coords.map(coord=>arr2an(coord))	// Convert coords into list of AN
-		const piecesCoords = pieces.map(piece=>piece.an).filter(an=>coordsAN.includes(an)).map(an=>an2arr(an))	// Take only pieces within range of center piece
+		const piecesAllowed = pieces.filter(piece=>allowedPieces.some(allowed=>allowed.NAME===piece.NAME))
+		const piecesCoords = piecesAllowed.map(piece=>piece.an).filter(an=>coordsAN.includes(an)).map(an=>an2arr(an))	// Take only pieces within range of center piece
 		const piecesCoordsNormalized = piecesCoords.map(coord=>[coord[0]-coords[0][0],coord[1]-coords[0][1]])	// Normalize pieces coords taking center piece as (0,0)
 		const rangeCoordsNormalized = coords.map(coord=>[coord[0]-coords[0][0],coord[1]-coords[0][1]])	// Normalize range coords taking center piece as (0,0)
 

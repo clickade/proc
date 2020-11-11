@@ -58,8 +58,8 @@ export default class App extends Component {
 		const courtRight = shuffleArray([...colLast0,...colLast1])
 
 		// Assign Court pieces randomly to generated AN positions
-		const piecesLeft = shuffleArray([PIECE.ASSASSIN,PIECE.MERCHANT,...new Array(courtLeft.length-2).fill(PIECE.POP)])
-		const piecesRight = shuffleArray([PIECE.ASSASSIN,PIECE.MERCHANT,...new Array(courtRight.length-2).fill(PIECE.POP)])
+		const piecesLeft = shuffleArray([PIECE.ASSASSIN,...new Array(courtLeft.length-1).fill(PIECE.POP)])
+		const piecesRight = shuffleArray([PIECE.ASSASSIN,...new Array(courtRight.length-1).fill(PIECE.POP)])
 
 		// Assign Royal pieces their AN positions and append Court pieces
 		const pieces = [
@@ -429,7 +429,7 @@ export default class App extends Component {
 
 	/**
 	 * Logic executing conversion of pieces
-	 * @param {*} e
+	 * @param {*} e event
 	 */
 	handleDoubleClick = e => {
 		const targetPiece = JSON.parse(e.target.getAttribute('data-piece'))

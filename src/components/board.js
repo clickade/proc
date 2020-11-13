@@ -69,7 +69,7 @@ export const SideBoard = ({rowSize,colSize,pieces,legalMoves,handleDragStart,han
 	},{})
 
 	return <Board cols={colSize+2} rows={rowSize+1}>
-		{   [...new Array(colSize+2).fill(0)].map((col,colIndex)=><Tile key={colIndex} borderless>{colIndex > 0 && colIndex < colSize+1 && num2Alpha(colIndex-1)}</Tile>) }
+		{   [...new Array(colSize+2).fill(0)].map((col,colIndex)=><Tile key={colIndex} borderless/>) }
 
 		{	boardState.map((row,rowIndex)=><Fragment>
 				<Tile key={rowIndex} borderless>{rowSize-rowIndex}</Tile>

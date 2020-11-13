@@ -6,7 +6,7 @@ import {num2Alpha} from './global'
  * Renders the board
  * @param {*} param0
  */
-export const GameBoard = ({rowSize,colSize,pieces,legalMoves,handleDragStart,handleDragOver,handleDrop,handleDoubleClick}) => {
+export const GameBoard = ({rowSize,colSize,pieces,legalTiles,handleDragStart,handleDragOver,handleDrop,handleDoubleClick}) => {
 	const boardState = rowSize && colSize ? new Array(rowSize).fill(new Array(colSize).fill(0)) : undefined
 	if(!boardState || !pieces) return null
 
@@ -26,7 +26,7 @@ export const GameBoard = ({rowSize,colSize,pieces,legalMoves,handleDragStart,han
 				{    row.map((col,colIndex)=>{
 						const an = `${num2Alpha(colIndex)}${rowSize-rowIndex}`
 						const color = gamePieces[an] ? gamePieces[an].COLOR : ''
-						const backgroundColor = legalMoves && legalMoves.indexOf(an) > -1 ? 'rgba(255,235,59,.1)' : ''
+						const backgroundColor = legalTiles && legalTiles.indexOf(an) > -1 ? 'rgba(255,235,59,.1)' : ''
 						return <Tile
 							key={an}
 							id={an}
@@ -56,7 +56,7 @@ export const GameBoard = ({rowSize,colSize,pieces,legalMoves,handleDragStart,han
 	</Board>
 }
 
-export const SideBoard = ({rowSize,colSize,pieces,legalMoves,handleDragStart,handleDragOver,handleDrop,handleDoubleClick}) => {
+export const SideBoard = ({rowSize,colSize,pieces,legalTiles,handleDragStart,handleDragOver,handleDrop,handleDoubleClick}) => {
 	const boardState = rowSize && colSize ? new Array(rowSize).fill(new Array(colSize).fill(0)) : undefined
 	if(!boardState || !pieces) return null
 
@@ -76,7 +76,7 @@ export const SideBoard = ({rowSize,colSize,pieces,legalMoves,handleDragStart,han
 				{    row.map((col,colIndex)=>{
 						const an = `${num2Alpha(colIndex)}${rowSize-rowIndex}`
 						const color = gamePieces[an] ? gamePieces[an].COLOR : ''
-						const backgroundColor = legalMoves && legalMoves.indexOf(an) > -1 ? 'rgba(255,235,59,.1)' : ''
+						const backgroundColor = legalTiles && legalTiles.indexOf(an) > -1 ? 'rgba(255,235,59,.1)' : ''
 						return <Tile
 							key={an}
 							id={an}

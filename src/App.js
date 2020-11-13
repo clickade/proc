@@ -390,7 +390,7 @@ export default class App extends Component {
 
 		// Highlight tiles to indicate legal movement
 		this.setState({
-			legalMoves: this.checkMoves(JSON.parse(e.target.getAttribute('data-piece')))
+			legalTiles: this.checkMoves(JSON.parse(e.target.getAttribute('data-piece')))
 		})
 	}
 
@@ -413,11 +413,11 @@ export default class App extends Component {
 		const dropPiece = JSON.parse(e.dataTransfer.getData('piece'))
 		const targetTile = JSON.parse(e.target.getAttribute('data-tile'))
 
-		this.setState({legalMoves:[]})
+		this.setState({legalTiles:[]})
 
 		// Check for no-drop conditions
 		if(!targetTile || dropPiece.an === targetTile.an) return // We don't care about self-drops
-		if(!this.state.legalMoves.includes(targetTile.an)) return // Tile is not on legalMoves list
+		if(!this.state.legalTiles.includes(targetTile.an)) return // Tile is not on legalTiles list
 
 		// Update AN of piece
 		const {pieces} = this.state
@@ -472,7 +472,7 @@ export default class App extends Component {
 	}
 
 	render(){
-		const {player,movesLeft,pieces,legalMoves} = this.state
+		const {player,movesLeft,pieces,legalTiles} = this.state
 		return <div style={{fontSize:'.8em'}}>
 			<h1 style={{textAlign:'center',margin:'0em',color: player && player.NAME===PLAYER.ROYAL.NAME ? 'skyblue' : 'tomato'}}>{player ? `${player.NAME}'S TURN` : 'PROC'}</h1>
 			<h3 style={{textAlign:'center',margin:'0em',color: player && player.NAME===PLAYER.ROYAL.NAME ? 'skyblue' : 'tomato'}}>{player ? `${movesLeft} move${movesLeft>1?'s':''} left` : ''}</h3>
@@ -481,7 +481,7 @@ export default class App extends Component {
 					rowSize={this.state[BOARD.ROW_SIZE]}
 					colSize={this.state[BOARD.COL_SIZE]}
 					{...{
-						pieces, legalMoves,
+						pieces, legalTiles,
 						handleDragOver: this.handleDragOver,
 						handleDragStart: this.handleDragStart,
 						handleDrop: this.handleDrop,
@@ -494,7 +494,7 @@ export default class App extends Component {
 					rowSize={this.state[BOARD.ROW_SIZE]}
 					colSize={1}
 					{...{
-						pieces: [], legalMoves,
+						pieces: [], legalTiles,
 						handleDragStart: this.handleDragStart,
 					}}
 				/>

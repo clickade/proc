@@ -1,12 +1,13 @@
 import {Component} from 'react'
-import {GameBoard} from './components/board'
-import {BOARD, PIECE, arr2an, shuffleArray, an2arr} from './components/global'
+import {GameBoard, SideBoard} from './components/board'
+import {BOARD, PIECE, arr2an, shuffleArray, an2arr, PLAYER} from './components/global'
 
 export default class App extends Component {
 	constructor(props){
 		super(props)
 
 		this.state = {
+			title: 'PROC',
 			[BOARD.COL_SIZE]: 9,
 			[BOARD.ROW_SIZE]: 10,
 		}
@@ -16,6 +17,27 @@ export default class App extends Component {
 
 	componentDidMount(){
 		this.resetBoard()	// Also serves to initialize the board
+		this.checkNextPlayer()	// Init player
+	}
+
+	/**
+	 * Deducts 1 move from current movesLeft then checks for next player
+	 */
+	checkMovesLeft = () => {
+		this.setState({
+			movesLeft: this.state.movesLeft - 1
+		},this.checkNextPlayer)
+	}
+
+	/**
+	 * Toggles current player based on moves left, resets moves left if player changes
+	 */
+	checkNextPlayer = () => {
+		const nextPlayer = this.state.movesLeft ? this.state.player : (this.state.player === PLAYER.COURT ? PLAYER.ROYAL : PLAYER.COURT)
+		this.setState({
+			player: nextPlayer,
+			movesLeft: this.state.player !== nextPlayer ? nextPlayer.MOVES : this.state.movesLeft
+		})
 	}
 
 	/**
@@ -105,28 +127,28 @@ export default class App extends Component {
 			return [
 				...this.checkRangeBoundary(this.addRange([coords],1)),	// Basic range of 1
 				...this.checkRangeBoundary(this.checkLeapPieces(this.addRange([coords],1),[PIECE.POP,PIECE.MERCHANT,PIECE.ASSASSIN])),	// Can leap over adjacent Court pieces
-			].map(coords=>arr2an(coords)).filter(an=>!occupiedTiles.includes(an))
+			].map(coords=>arr2an(coords)).filter(an=>an!==piece.an && !occupiedTiles.includes(an))
 		}
 		if(piece.NAME===PIECE.KING.NAME){
-			const ediblePieces = pieces.filter(piece=>piece.NAME!==PIECE.KNIGHT.NAME).map(piece=>piece.an)	// Kings can capture anything but Knights
+			const ediblePieces = pieces.filter(piece=>[PIECE.KNIGHT].every(edible=>edible.NAME!==piece.NAME)).map(piece=>piece.an)	// Kings can capture anything but Knights
 			return [
 				[coords[0],coords[1]-1],	// Can move up
 				[coords[0],coords[1]+1],	// Can move down
-			].map(coords=>arr2an(coords)).filter(an=>!occupiedTiles.includes(an)||ediblePieces.includes(an))
+			].map(coords=>arr2an(coords)).filter(an=>an!==piece.an && (!occupiedTiles.includes(an)||ediblePieces.includes(an)))
 		}
 		if(piece.NAME===PIECE.KNIGHT.NAME){
-			const ediblePieces = pieces.filter(piece=>piece.NAME!==PIECE.KING.NAME).map(piece=>piece.an)	// Knights can capture anything but Kings
+			const ediblePieces = pieces.filter(piece=>[PIECE.KNIGHT,PIECE.KING].every(edible=>edible.NAME!==piece.NAME)).map(piece=>piece.an)	// Knights can capture Court pieces
 			return [
 				...this.checkRangePieces(this.checkRangeBoundary(this.addRange([coords],maxRange))),	// Moves like a QUEEN
-			].map(coords=>arr2an(coords)).filter(an=>!occupiedTiles.includes(an)||ediblePieces.includes(an))
+			].map(coords=>arr2an(coords)).filter(an=>an!==piece.an && (!occupiedTiles.includes(an)||ediblePieces.includes(an)))
 		}
 		if(piece.NAME===PIECE.ASSASSIN.NAME){
-			const ediblePieces = pieces.filter(piece=>[PIECE.POP.NAME,PIECE.MERCHANT.NAME,PIECE.KING.NAME].includes(piece.NAME)).map(piece=>piece.an)	// Assassins can Kings and swap with Court pieces
+			const ediblePieces = pieces.filter(piece=>[PIECE.ASSASSIN,PIECE.POP,PIECE.MERCHANT,PIECE.KING].some(edible=>edible.NAME===piece.NAME)).map(piece=>piece.an)	// Assassins can Kings and swap with Court pieces
 			return [
 				...this.checkRangeBoundary(this.addRange([coords],1)),	// Basic range of 1
 				...this.checkRangeBoundary(this.checkLeapPieces(this.addRange([coords],1),[PIECE.POP,PIECE.MERCHANT,PIECE.ASSASSIN])),	// Can leap over adjacent Court pieces
 				...this.checkSwapPieces(this.checkRangeBoundary(this.addRange([coords],maxRange)),[PIECE.POP,PIECE.MERCHANT,PIECE.ASSASSIN])	// Can swap with Court pieces in range
-			].map(coords=>arr2an(coords)).filter(an=>!occupiedTiles.includes(an)||ediblePieces.includes(an))
+			].map(coords=>arr2an(coords)).filter(an=>an!==piece.an && (!occupiedTiles.includes(an)||ediblePieces.includes(an)))
 		}
 		return []
 	}
@@ -401,7 +423,7 @@ export default class App extends Component {
 		const {pieces} = this.state
 
 		// If drop piece is an Assassin and tile pieces are Court pieces, execute a swap instad of a capture
-		if(targetTile.piece && dropPiece.NAME === PIECE.ASSASSIN.NAME && dropPiece.CLASS === targetTile.piece.CLASS) return this.setState({
+		if(targetTile.piece && dropPiece.NAME === PIECE.ASSASSIN.NAME && dropPiece.PLAYER_NAME === targetTile.piece.PLAYER_NAME) return this.setState({
 			pieces: [
 				...pieces.filter(piece=>![dropPiece.an,targetTile.an].includes(piece.an)),
 				{
@@ -413,7 +435,7 @@ export default class App extends Component {
 					an: dropPiece.an,
 				}
 			]
-		})
+		},this.checkMovesLeft)
 
 		// Move piece into new position (implies capture)
 		this.setState({
@@ -424,7 +446,7 @@ export default class App extends Component {
 					an: targetTile.an
 				}
 			]
-		})
+		},this.checkMovesLeft)
 	}
 
 	/**
@@ -450,19 +472,33 @@ export default class App extends Component {
 	}
 
 	render(){
-		const {pieces,legalMoves} = this.state
-		return <div>
-			<h1 style={{textAlign:'center',margin:'0em'}}>PROC</h1>
-			<GameBoard
-				rowSize={this.state[BOARD.ROW_SIZE]}
-				colSize={this.state[BOARD.COL_SIZE]}
-				{...{
-					pieces, legalMoves,
-					handleDragOver: this.handleDragOver,
-					handleDragStart: this.handleDragStart,
-					handleDrop: this.handleDrop,
-					handleDoubleClick: this.handleDoubleClick
-				}}/>
+		const {player,movesLeft,pieces,legalMoves} = this.state
+		return <div style={{fontSize:'.8em'}}>
+			<h1 style={{textAlign:'center',margin:'0em',color: player && player.NAME===PLAYER.ROYAL.NAME ? 'skyblue' : 'tomato'}}>{player ? `${player.NAME}'S TURN` : 'PROC'}</h1>
+			<h3 style={{textAlign:'center',margin:'0em',color: player && player.NAME===PLAYER.ROYAL.NAME ? 'skyblue' : 'tomato'}}>{player ? `${movesLeft} move${movesLeft>1?'s':''} left` : ''}</h3>
+			<div style={{display:'inline-block'}}>
+				<GameBoard
+					rowSize={this.state[BOARD.ROW_SIZE]}
+					colSize={this.state[BOARD.COL_SIZE]}
+					{...{
+						pieces, legalMoves,
+						handleDragOver: this.handleDragOver,
+						handleDragStart: this.handleDragStart,
+						handleDrop: this.handleDrop,
+						handleDoubleClick: this.handleDoubleClick
+					}}
+				/>
+			</div>
+			<div style={{display:'inline-block'}}>
+				<SideBoard
+					rowSize={this.state[BOARD.ROW_SIZE]}
+					colSize={1}
+					{...{
+						pieces: [], legalMoves,
+						handleDragStart: this.handleDragStart,
+					}}
+				/>
+			</div>
 		</div>
 	}
 }

@@ -7,41 +7,59 @@ export const BOARD = {
 }
 
 /**
+ * Player tracker
+ */
+export const PLAYER = {
+    ROYAL: {
+        MOVES: 2,
+        NAME: 'ROYAL'
+    },
+    COURT: {
+        MOVES: 1,
+        NAME: 'COURT'
+    },
+}
+
+export const PHASES = {
+
+}
+
+/**
  * Symbols of game pieces
  */
 export const PIECE = {
     KING: {
         SYMBOL: '♛',
         NAME: 'King',
-        CLASS: 'royal',
+        PLAYER_NAME: PLAYER.ROYAL.NAME,
         COLOR: 'skyblue',
         TOOLTIP: 'The King can move downwards or upwards one step. If the King is captured, the Court player wins.'
     },
     KNIGHT: {
         SYMBOL: '♞',
         NAME: 'Knight',
-        CLASS: 'royal',
+        PLAYER_NAME: PLAYER.ROYAL.NAME,
         COLOR: 'skyblue',
         TOOLTIP: 'The Knight can move diagonally or laterally any number of steps and turn in any direction. Court pieces in direct line-of-sight of the Knight cannot be moved during the Court player`s turn. Knights can capture any Court piece by moving onto its square. If a Knight captures an Assassin piece, the Royal player wins. If the Knight captures a non-Assassin piece that is not laterally adjacent to the King piece, the Court player wins.'
     },
     POP: {
         SYMBOL: '♟',
         NAME: 'Pop',
-        CLASS: 'court',
+        PLAYER_NAME: PLAYER.COURT.NAME,
         COLOR: 'white',
         TOOLTIP: 'The Pop can move diagonally or laterally one step. If the Pop is captured, the Court player wins.'
     },
     MERCHANT: {
         SYMBOL: '♜',
         NAME: 'Merchant',
-        CLASS: 'court',
+        PLAYER_NAME: PLAYER.COURT.NAME,
         COLOR: 'yellow',
         TOOLTIP: 'The Merchant can move diagonally or laterally one step. Only played in a Merchant-version of Proc. The Royal replaces a Court piece on both sides of the board after the Court has placed their pieces. Court pieces are not revealed this way. The Royal wins if both Assassins are replaced.'
     },
     ASSASSIN: {
         SYMBOL: '♝',
         NAME: 'Assassin',
-        CLASS: 'court',
+        PLAYER_NAME: PLAYER.COURT.NAME,
         COLOR: 'tomato',
         TOOLTIP: 'The Assassin can move laterally any number of steps. The Assassins can swap positions with another Court piece in direct line-of-sight. If the Assassin is captured by a Knight, the Royal wins. The Assassin can capture the King by moving onto its square and there are no Knights one space diagonal or lateral from the King. The Assassin can also capture the King if the King is the only piece in the middle of two diagonally or laterally opposite Assassins. If the King is captured, the Court wins.'
     },

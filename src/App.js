@@ -111,7 +111,24 @@ export default class App extends Component {
 			}
 		})
 
-		this.setState({pieces})
+		// Generate AN positions for the court pieces for side board
+		const sidePieces = [...new Array(this.state[BOARD.ROW_SIZE]).fill(0)].map((row,index)=>{
+			if(index > 1 && index < this.state[BOARD.ROW_SIZE]){
+				return arr2an([0,index])
+			}
+			return null
+		}).filter(piece=>piece!==null).map(an=>{
+			return {
+				...PIECE.MERCHANT,
+				an
+			}
+		})
+
+		console.info('sidePieces init',sidePieces)
+
+		this.setState({
+			pieces, sidePieces
+		})
 	}
 
 	/**
@@ -472,10 +489,13 @@ export default class App extends Component {
 	}
 
 	render(){
-		const {player,movesLeft,pieces,legalTiles} = this.state
+		const {player,movesLeft,pieces,sidePieces,legalTiles} = this.state
+
+		console.info('sidePieces',sidePieces)
+
 		return <div style={{fontSize:'.8em'}}>
 			<h1 style={{textAlign:'center',margin:'0em',color: player && player.NAME===PLAYER.ROYAL.NAME ? 'skyblue' : 'tomato'}}>{player ? `${player.NAME}'S TURN` : 'PROC'}</h1>
-			<h3 style={{textAlign:'center',margin:'0em',color: player && player.NAME===PLAYER.ROYAL.NAME ? 'skyblue' : 'tomato'}}>{player ? `${movesLeft} move${movesLeft>1?'s':''} left` : ''}</h3>
+			<h3 style={{textAlign:'center',margin:'0em',color: player && player.NAME===PLAYER.ROYAL.NAME ? 'skyblue' : 'tomato'}}>{player ? `${movesLeft} Move${movesLeft>1?'s':''} Left` : ''}</h3>
 			<div style={{display:'inline-block'}}>
 				<GameBoard
 					rowSize={this.state[BOARD.ROW_SIZE]}
@@ -494,7 +514,7 @@ export default class App extends Component {
 					rowSize={this.state[BOARD.ROW_SIZE]}
 					colSize={1}
 					{...{
-						pieces: [], legalTiles,
+						sidePieces, legalTiles,
 						handleDragStart: this.handleDragStart,
 					}}
 				/>

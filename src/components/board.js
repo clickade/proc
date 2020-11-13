@@ -56,12 +56,12 @@ export const GameBoard = ({rowSize,colSize,pieces,legalTiles,handleDragStart,han
 	</Board>
 }
 
-export const SideBoard = ({rowSize,colSize,pieces,legalTiles,handleDragStart,handleDragOver,handleDrop,handleDoubleClick}) => {
+export const SideBoard = ({rowSize,colSize,sidePieces,legalTiles,handleDragStart,handleDragOver,handleDrop,handleDoubleClick}) => {
 	const boardState = rowSize && colSize ? new Array(rowSize).fill(new Array(colSize).fill(0)) : undefined
-	if(!boardState || !pieces) return null
+	if(!boardState || !sidePieces) return null
 
 	// Convert array into dict
-	const gamePieces = pieces.reduce((temp,piece)=>{
+	const gamePieces = sidePieces.reduce((temp,piece)=>{
 		return {
 			...temp,
 			[piece.an]: piece

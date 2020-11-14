@@ -124,8 +124,6 @@ export default class App extends Component {
 			}
 		})
 
-		console.info('sidePieces init',sidePieces)
-
 		this.setState({
 			pieces, sidePieces
 		})
@@ -137,6 +135,9 @@ export default class App extends Component {
 	 */
 	checkMoves = (piece) => {
 		const {pieces} = this.state
+
+		if(piece.PLAYER_NAME!==this.state.player.NAME) return []	// If piece is not related to current player, it is not allowed to move
+
 		const occupiedTiles = pieces.map(piece=>piece.an)	// Get array of AN of all pieces
 		const coords = an2arr(piece.an)
 		const maxRange = Math.max(this.state[BOARD.COL_SIZE],this.state[BOARD.ROW_SIZE])	// Get max length of board to calculate movement range

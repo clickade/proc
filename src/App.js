@@ -9,7 +9,7 @@ export default class App extends Component {
 		this.state = {
 			title: 'PROC',
 			[BOARD.COL_SIZE]: 9,
-			[BOARD.ROW_SIZE]: 10,
+			[BOARD.ROW_SIZE]: 9,
 		}
 
 		document.title = 'Proc | The Game'
@@ -17,7 +17,6 @@ export default class App extends Component {
 
 	componentDidMount(){
 		this.resetBoard()	// Also serves to initialize the board
-		this.checkNextPlayer()	// Init player
 	}
 
 	/**
@@ -120,18 +119,20 @@ export default class App extends Component {
 		}).filter(piece=>piece!==null).map(an=>{
 			return {
 				...PIECE.MERCHANT,
-				an
+				an,
 			}
 		})
 
 		this.setState({
-			pieces, sidePieces
+			pieces, sidePieces, 
+			player: PLAYER.COURT,	// Royal start first
+			movesLeft: PLAYER.COURT.MOVES	// Starting moves
 		})
 	}
 
 	/**
 	 * Checks all possible legal moves for target piece, returns array of AN positions piece can legally move onto
-	 * @param {*} piece piece dict
+	 * @param {{}} piece piece dict
 	 */
 	checkMoves = (piece) => {
 		const {pieces} = this.state
@@ -141,6 +142,16 @@ export default class App extends Component {
 		const occupiedTiles = pieces.map(piece=>piece.an)	// Get array of AN of all pieces
 		const coords = an2arr(piece.an)
 		const maxRange = Math.max(this.state[BOARD.COL_SIZE],this.state[BOARD.ROW_SIZE])	// Get max length of board to calculate movement range
+		if(piece.isSidePiece){
+			if([PIECE.MERCHANT.NAME].includes(piece.NAME)){
+				return [
+					...this.checkRangePiecesAll(this.addHorizontalRange([coords],maxRange),[PIECE.POP])	// Can swap with Court pieces in range
+				].map(coords=>arr2an(coords))
+			}
+
+			return []
+		}
+
 		if([PIECE.POP.NAME,PIECE.MERCHANT.NAME].includes(piece.NAME)){
 			return [
 				...this.checkRangeBoundary(this.addRange([coords],1)),	// Basic range of 1
@@ -173,43 +184,71 @@ export default class App extends Component {
 
 	/**
 	 * Returns total movement range of a piece (recursive)
-	 * @param {[[]]} coords [[x,y]] initial coordinates
+	 * @param {[[]]} tileCoords [[x,y]] initial coordinates
 	 * @param {*} range range
 	 */
-	addRange = (coords,range) => {
-		if(!range) return coords
+	addRange = (tileCoords,range) => {
+		if(!range) return tileCoords	// No range default
 		return this.addRange([
-			...coords,
-			[coords[0][0]-range,coords[0][1]-range],
-			[coords[0][0]-range,coords[0][1]],
-			[coords[0][0]-range,coords[0][1]+range],
-			[coords[0][0],coords[0][1]-range],
-			[coords[0][0],coords[0][1]+range],
-			[coords[0][0]+range,coords[0][1]-range],
-			[coords[0][0]+range,coords[0][1]],
-			[coords[0][0]+range,coords[0][1]+range],
+			...tileCoords,
+			[tileCoords[0][0]-range,tileCoords[0][1]-range],
+			[tileCoords[0][0]-range,tileCoords[0][1]],
+			[tileCoords[0][0]-range,tileCoords[0][1]+range],
+			[tileCoords[0][0],tileCoords[0][1]-range],
+			[tileCoords[0][0],tileCoords[0][1]+range],
+			[tileCoords[0][0]+range,tileCoords[0][1]-range],
+			[tileCoords[0][0]+range,tileCoords[0][1]],
+			[tileCoords[0][0]+range,tileCoords[0][1]+range],
+		],--range)
+	}
+
+	/**
+	 * Returns total horizontal movement range of a piece (recursive)
+	 * @param {[[]]} tileCoords [[x,y]] initial coordinates
+	 * @param {*} range range
+	 */
+	addHorizontalRange = (tileCoords,range) => {
+		if(!range) return tileCoords	// No range default
+		return this.addHorizontalRange([
+			...tileCoords,
+			[tileCoords[0][0]-range,tileCoords[0][1]],
+			[tileCoords[0][0]+range,tileCoords[0][1]],
+		],--range)
+	}
+
+	/**
+	 * Returns total vertical movement range of a piece (recursive)
+	 * @param {[[]]} tileCoords [[x,y]] initial coordinates
+	 * @param {*} range range
+	 */
+	addVerticalRange = (tileCoords,range) => {
+		if(!range) return tileCoords	// No range default
+		return this.addVerticalRange([
+			...tileCoords,
+			[tileCoords[0][0],tileCoords[0][1]-range],
+			[tileCoords[0][0],tileCoords[0][1]+range],
 		],--range)
 	}
 
 	/**
 	 * Truncates array of coords to the inside of board boundary
-	 * @param {[[]]} coords [[x,y],[x,y],...] initial list of coordinates
+	 * @param {[[]]} tileCoords [[x,y],[x,y],...] initial list of coordinates
 	 */
-	checkRangeBoundary = coords => {
+	checkRangeBoundary = tileCoords => {
 		// Movement does not exceed board boundary
-		return coords.filter(coord=>coord[0] >= 0 && coord[1] >= 0 && coord[0] <= this.state[BOARD.COL_SIZE] && coord[1] <= this.state[BOARD.ROW_SIZE])
+		return tileCoords.filter(coord=>coord[0] >= 0 && coord[1] >= 0 && coord[0] <= this.state[BOARD.COL_SIZE] && coord[1] <= this.state[BOARD.ROW_SIZE])
 	}
 
 	/**
 	 * Truncates array of coords to the first encountered piece per direction
-	 * @param {[[]]} coords [[x,y],[x,y],...] initial list of coordinates
+	 * @param {[[]]} tileCoords [[x,y],[x,y],...] initial list of coordinates
 	 */
-	checkRangePieces = coords => {
+	checkRangePieces = tileCoords => {
 		const {pieces} = this.state
-		const coordsAN = coords.map(coord=>arr2an(coord))	// Convert coords into list of AN
+		const coordsAN = tileCoords.map(coord=>arr2an(coord))	// Convert coords into list of AN
 		const piecesCoords = pieces.map(piece=>piece.an).filter(an=>coordsAN.includes(an)).map(an=>an2arr(an))	// Take only pieces within range of center piece
-		const piecesCoordsNormalized = piecesCoords.map(coord=>[coord[0]-coords[0][0],coord[1]-coords[0][1]])	// Normalize pieces coords taking center piece as (0,0)
-		const rangeCoordsNormalized = coords.map(coord=>[coord[0]-coords[0][0],coord[1]-coords[0][1]])	// Normalize range coords taking center piece as (0,0)
+		const piecesCoordsNormalized = piecesCoords.map(coord=>[coord[0]-tileCoords[0][0],coord[1]-tileCoords[0][1]])	// Normalize pieces coords taking center piece as (0,0)
+		const rangeCoordsNormalized = tileCoords.map(coord=>[coord[0]-tileCoords[0][0],coord[1]-tileCoords[0][1]])	// Normalize range coords taking center piece as (0,0)
 
 		// Truncate range
 		const rangeCoordsTruncated = rangeCoordsNormalized.filter(coord=>{
@@ -258,35 +297,35 @@ export default class App extends Component {
 			return false
 		})
 
-		return rangeCoordsTruncated.map(coord=>[coord[0]+coords[0][0],coord[1]+coords[0][1]])	// De-normalize valid range taking center piece as origin
+		return rangeCoordsTruncated.map(coord=>[coord[0]+tileCoords[0][0],coord[1]+tileCoords[0][1]])	// De-normalize valid range taking center piece as tileCoords
 	}
 
 	/**
 	 * Truncates array of coords to the first encountered piece per direction and add +1 range in that direction (to simulate leaping)
-	 * @param {[[]]} coords [[x,y],[x,y],...] initial list of coordinates
+	 * @param {[[]]} tileCoords [[x,y],[x,y],...] initial list of coordinates
 	 * @param {[]} allowedPieces [{}] list of valid pieces to leap over
 	 */
-	checkLeapPieces = (coords,allowedPieces) => {
+	checkLeapPieces = (tileCoords,allowedPieces) => {
 		allowedPieces = allowedPieces || []
 
 		const {pieces} = this.state
-		const coordsAN = coords.map(coord=>arr2an(coord))	// Convert coords into list of AN
+		const coordsAN = tileCoords.map(coord=>arr2an(coord))	// Convert coords into list of AN
 		const piecesAllowed = pieces.filter(piece=>allowedPieces.some(allowed=>allowed.NAME===piece.NAME))
 		const piecesCoords = piecesAllowed.map(piece=>piece.an).filter(an=>coordsAN.includes(an)).map(an=>an2arr(an))	// Take only pieces within range of center piece
-		const piecesCoordsNormalized = piecesCoords.map(coord=>[coord[0]-coords[0][0],coord[1]-coords[0][1]])	// Normalize pieces coords taking center piece as (0,0)
-		const rangeCoordsNormalized = coords.map(coord=>[coord[0]-coords[0][0],coord[1]-coords[0][1]])	// Normalize range coords taking center piece as (0,0)
+		const piecesCoordsNormalized = piecesCoords.map(coord=>[coord[0]-tileCoords[0][0],coord[1]-tileCoords[0][1]])	// Normalize pieces coords taking center piece as (0,0)
+		const rangeCoordsNormalized = tileCoords.map(coord=>[coord[0]-tileCoords[0][0],coord[1]-tileCoords[0][1]])	// Normalize range coords taking center piece as (0,0)
 
-		// Truncate pieces and add +1 range to piece position in that direction from origin
+		// Truncate pieces and add +1 range to piece position in that direction from tileCoords
 		const rangeCoordsTruncated = piecesCoordsNormalized.reduce((temp,coord)=>{
 			// Filter x-axis coords	[0,y]
 			let newCoord
 			if(!coord[0] && coord[1]){
 				let piecesCol = rangeCoordsNormalized.filter(coord=>!coord[0])	// x-axis pieces
-				if(coord[1]>0){	// Range is above origin
+				if(coord[1]>0){	// Range is above tileCoords
 					piecesCol = piecesCol.filter(coord=>coord[1]>0)
 					newCoord = piecesCol.every(piece=>coord[1]<=piece[1]) && [coord[0],coord[1]+1]
 				}
-				else if(coord[1]<0){	// Range is below origin
+				else if(coord[1]<0){	// Range is below tileCoords
 					piecesCol = piecesCol.filter(coord=>coord[1]<0)
 					newCoord = piecesCol.every(piece=>coord[1]>=piece[1]) && [coord[0],coord[1]-1]
 				}
@@ -294,11 +333,11 @@ export default class App extends Component {
 			// Filter y-axis coords [x,0]
 			else if(coord[0] && !coord[1]){
 				let piecesRow = rangeCoordsNormalized.filter(coord=>!coord[1])	// y-axis pieces
-				if(coord[0]>0){	// Range is right of origin
+				if(coord[0]>0){	// Range is right of tileCoords
 					piecesRow = piecesRow.filter(coord=>coord[0]>0)
 					newCoord = piecesRow.every(piece=>coord[0]<=piece[0]) && [coord[0]+1,coord[1]]
 				}
-				else if(coord[0]<0){	// Range is left of origin
+				else if(coord[0]<0){	// Range is left of tileCoords
 					piecesRow = piecesRow.filter(coord=>coord[0]<0)
 					newCoord = piecesRow.every(piece=>coord[0]>=piece[0]) && [coord[0]-1,coord[1]]
 				}
@@ -306,19 +345,19 @@ export default class App extends Component {
 			else {
 				// Filter diagonal pieces
 				let piecesDiag = rangeCoordsNormalized.filter(coord=>coord[0]&&coord[1])	// diagonal pieces
-				if(coord[0]>0 && coord[1]>0){	// Range is upper-right of origin
+				if(coord[0]>0 && coord[1]>0){	// Range is upper-right of tileCoords
 					piecesDiag = piecesDiag.filter(coord=>coord[0]>0 && coord[1]>0)
 					newCoord = piecesDiag.every(piece=>coord[0]<=piece[0] && coord[1]<=piece[1]) && [coord[0]+1,coord[1]+1]
 				}
-				if(coord[0]>0 && coord[1]<0){	// Range is lower-right of origin
+				if(coord[0]>0 && coord[1]<0){	// Range is lower-right of tileCoords
 					piecesDiag = piecesDiag.filter(coord=>coord[0]>0 && coord[1]<0)
 					newCoord = piecesDiag.every(piece=>coord[0]<=piece[0] && coord[1]>=piece[1]) && [coord[0]+1,coord[1]-1]
 				}
-				if(coord[0]<0 && coord[1]>0){	// Range is upper-left of origin
+				if(coord[0]<0 && coord[1]>0){	// Range is upper-left of tileCoords
 					piecesDiag = piecesDiag.filter(coord=>coord[0]<0 && coord[1]>0)
 					newCoord = piecesDiag.every(piece=>coord[0]>=piece[0] && coord[1]<=piece[1]) && [coord[0]-1,coord[1]+1]
 				}
-				if(coord[0]<0 && coord[1]<0){	// Range is lower-left of origin
+				if(coord[0]<0 && coord[1]<0){	// Range is lower-left of tileCoords
 					piecesDiag = piecesDiag.filter(coord=>coord[0]<0 && coord[1]<0)
 					newCoord = piecesDiag.every(piece=>coord[0]>=piece[0] && coord[1]>=piece[1]) && [coord[0]-1,coord[1]-1]
 				}
@@ -329,23 +368,24 @@ export default class App extends Component {
 			]
 		},[]).filter(coord=>coord)	// Retain only valid coordinates
 
-		return rangeCoordsTruncated.map(coord=>[coord[0]+coords[0][0],coord[1]+coords[0][1]])	// De-normalize valid range taking center piece as origin
+		return rangeCoordsTruncated.map(coord=>[coord[0]+tileCoords[0][0],coord[1]+tileCoords[0][1]])	// De-normalize valid range taking center piece as tileCoords
 	}
 
 	/**
 	 * Truncates array of coords to the first encountered piece in range per direction
-	 * @param {[[]]} coords [[x,y],[x,y],...] initial list of coordinates
+	 * @param {[[]]} tileCoords [[x,y],[x,y],...] initial list of coordinates
 	 * @param {[]} allowedPieces [{}] list of valid pieces to leap over
 	 */
-	checkSwapPieces = (coords,allowedPieces) => {
+	checkSwapPieces = (tileCoords,allowedPieces) => {
 		allowedPieces = allowedPieces || []
 
 		const {pieces} = this.state
-		const coordsAN = coords.map(coord=>arr2an(coord))	// Convert coords into list of AN
-		const piecesAllowed = pieces.filter(piece=>allowedPieces.some(allowed=>allowed.NAME===piece.NAME))
-		const piecesInRange = piecesAllowed.filter(piece=>coords.some(coord=>arr2an(coord)===piece.an))
+		const coordsAN = tileCoords.map(coord=>arr2an(coord))	// Convert coords into list of AN
+		const piecesAllowed = pieces.filter(piece=>allowedPieces.some(allowed=>allowed.NAME===piece.NAME))	// Truncate to list of allowed pieces
+		//const piecesInRange = coordsAN.filter(an=>piecesAllowed.some(piece=>an===piece.an))
+		const piecesInRange = piecesAllowed.filter(piece=>coordsAN.some(an=>an===piece.an))
 		const piecesCoords = piecesInRange.map(piece=>piece.an).filter(an=>coordsAN.includes(an)).map(an=>an2arr(an))	// Take only pieces within range of center piece
-		const piecesCoordsNormalized = piecesCoords.map(coord=>[coord[0]-coords[0][0],coord[1]-coords[0][1]])	// Normalize pieces coords taking center piece as (0,0)
+		const piecesCoordsNormalized = piecesCoords.map(coord=>[coord[0]-tileCoords[0][0],coord[1]-tileCoords[0][1]])	// Normalize pieces coords taking center piece as (0,0)
 
 		// Truncate range
 		const rangeCoordsTruncated = piecesCoordsNormalized.filter(coord=>{
@@ -395,7 +435,22 @@ export default class App extends Component {
 		})
 
 
-		return rangeCoordsTruncated.map(coord=>[coord[0]+coords[0][0],coord[1]+coords[0][1]])	// De-normalize valid range taking center piece as origin
+		return rangeCoordsTruncated.map(coord=>[coord[0]+tileCoords[0][0],coord[1]+tileCoords[0][1]])	// De-normalize valid range taking center piece as tileCoords
+	}
+
+	/**
+	 * Truncates array of coords to all pieces in horizontal direction
+	 * @param {[[]]} tileCoords [[x,y],[x,y],...] initial list of coordinates
+	 * @param {[]} allowedPieces [{}] list of valid pieces to leap over
+	 */
+	checkRangePiecesAll = (tileCoords,allowedPieces) => {
+		allowedPieces = allowedPieces || []
+
+		const {pieces} = this.state
+		const coordsAN = tileCoords.map(coord=>arr2an(coord))	// Convert coords into list of AN
+		const piecesAllowed = pieces.filter(piece=>allowedPieces.some(allowed=>allowed.NAME===piece.NAME))	// Truncate to list of allowed pieces
+		//const piecesInRange = coordsAN.filter(an=>piecesAllowed.some(piece=>an===piece.an))
+		return piecesAllowed.filter(piece=>coordsAN.some(an=>an===piece.an)).map(piece=>an2arr(piece.an))
 	}
 
 	/**
@@ -434,11 +489,29 @@ export default class App extends Component {
 		this.setState({legalTiles:[]})
 
 		// Check for no-drop conditions
-		if(!targetTile || dropPiece.an === targetTile.an) return // We don't care about self-drops
+		if(!targetTile || ((dropPiece.an === targetTile.an) && !dropPiece.isSidePiece)) return // We don't care about self-drops
 		if(!this.state.legalTiles.includes(targetTile.an)) return // Tile is not on legalTiles list
 
 		// Update AN of piece
-		const {pieces} = this.state
+		const {pieces,sidePieces} = this.state
+
+		// If drop piece is a Merchant from Side Board and tile pieces are Court pieces, execute a swap instad of a capture
+		if(targetTile.piece && dropPiece.isSidePiece && dropPiece.NAME === PIECE.MERCHANT.NAME && dropPiece.PLAYER_NAME === targetTile.piece.PLAYER_NAME) return this.setState({
+			pieces: [
+				...pieces.filter(piece=>![targetTile.an].includes(piece.an)),
+				{
+					...dropPiece,
+					an: targetTile.an
+				}
+			],
+			sidePieces: [
+				...sidePieces.filter(piece=>![dropPiece.an].includes(piece.an)),
+				{
+					...targetTile.piece,
+					an: dropPiece.an,
+				}
+			]
+		}) //,this.checkMovesLeft)
 
 		// If drop piece is an Assassin and tile pieces are Court pieces, execute a swap instad of a capture
 		if(targetTile.piece && dropPiece.NAME === PIECE.ASSASSIN.NAME && dropPiece.PLAYER_NAME === targetTile.piece.PLAYER_NAME) return this.setState({
@@ -491,8 +564,6 @@ export default class App extends Component {
 
 	render(){
 		const {player,movesLeft,pieces,sidePieces,legalTiles} = this.state
-
-		console.info('sidePieces',sidePieces)
 
 		return <div style={{fontSize:'.8em'}}>
 			<h1 style={{textAlign:'center',margin:'0em',color: player && player.NAME===PLAYER.ROYAL.NAME ? 'skyblue' : 'tomato'}}>{player ? `${player.NAME}'S TURN` : 'PROC'}</h1>

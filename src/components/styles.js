@@ -11,6 +11,13 @@ export const Tile = styled.div`
     border: solid white ${props=>props.borderless ? '0em' : '.05em'};
     text-Align: center;
     background-color: ${props=>props.backgroundColor || ''};
+    background: ${props=>props.locked ? `repeating-linear-gradient(
+        45deg,
+        tomato,
+        tomato .5em,
+        darkred .5em,
+        darkred 1em
+    )` : ''};
 `
 
 /**

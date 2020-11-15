@@ -19,10 +19,10 @@ export const GameBoard = ({rowSize,colSize,pieces,legalTiles,handleDragStart,han
 	},{})
 
 	return <Board cols={colSize+2} rows={rowSize+1}>
-		{   [...new Array(colSize+2).fill(0)].map((col,colIndex)=><Tile key={colIndex} borderless>{colIndex > 0 && colIndex < colSize+1 && num2Alpha(colIndex-1)}</Tile>) }
+		{   [...new Array(colSize+2).fill(0)].map((col,colIndex)=><Tile key={colIndex.toString()} borderless>{colIndex > 0 && colIndex < colSize+1 && num2Alpha(colIndex-1)}</Tile>) }
 
-		{	boardState.map((row,rowIndex)=><Fragment>
-				<Tile key={rowIndex} borderless>{rowSize-rowIndex}</Tile>
+		{	boardState.map((row,rowIndex)=><Fragment key={rowIndex.toString()}>
+				<Tile borderless>{rowSize-rowIndex}</Tile>
 				{    row.map((col,colIndex)=>{
 						const an = `${num2Alpha(colIndex)}${rowSize-rowIndex}`
 						const color = gamePieces[an] ? gamePieces[an].COLOR : ''
@@ -34,6 +34,7 @@ export const GameBoard = ({rowSize,colSize,pieces,legalTiles,handleDragStart,han
 							onDragOver={handleDragOver}
 							onDrop={handleDrop}
 							backgroundColor={backgroundColor}
+							locked={backgroundColor}
 						>
 							{	gamePieces[an] ?
 								<Piece
@@ -49,7 +50,7 @@ export const GameBoard = ({rowSize,colSize,pieces,legalTiles,handleDragStart,han
 						</Tile>
 					})
 				}
-				<Tile key={rowIndex+rowSize} borderless></Tile>
+				<Tile borderless/>
 			</Fragment>
 			)
 		}
@@ -64,15 +65,18 @@ export const SideBoard = ({rowSize,colSize,sidePieces,legalTiles,handleDragStart
 	const gamePieces = sidePieces.reduce((temp,piece)=>{
 		return {
 			...temp,
-			[piece.an]: piece
+			[piece.an]: {
+				...piece,
+				isSidePiece: true
+			}
 		}
 	},{})
 
 	return <Board cols={colSize+2} rows={rowSize+1}>
 		{   [...new Array(colSize+2).fill(0)].map((col,colIndex)=><Tile key={colIndex} borderless/>) }
 
-		{	boardState.map((row,rowIndex)=><Fragment>
-				<Tile key={rowIndex} borderless>{rowSize-rowIndex}</Tile>
+		{	boardState.map((row,rowIndex)=><Fragment key={rowIndex.toString()}>
+				<Tile borderless>{rowSize-rowIndex}</Tile>
 				{    row.map((col,colIndex)=>{
 						const an = `${num2Alpha(colIndex)}${rowSize-rowIndex}`
 						const color = gamePieces[an] ? gamePieces[an].COLOR : ''
@@ -99,7 +103,7 @@ export const SideBoard = ({rowSize,colSize,sidePieces,legalTiles,handleDragStart
 						</Tile>
 					})
 				}
-				<Tile key={rowIndex+rowSize} borderless></Tile>
+				<Tile borderless/>
 			</Fragment>
 			)
 		}

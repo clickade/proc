@@ -26,7 +26,7 @@ export const GameBoard = ({rowSize,colSize,pieces,legalTiles,handleDragStart,han
 				{    row.map((col,colIndex)=>{
 						const an = `${num2Alpha(colIndex)}${rowSize-rowIndex}`
 						const color = gamePieces[an] ? gamePieces[an].COLOR : ''
-						const backgroundColor = legalTiles && legalTiles.indexOf(an) > -1 ? 'rgba(255,235,59,.1)' : ''
+						const backgroundColor = legalTiles && legalTiles.indexOf(an) > -1 ? 'rgba(255,255,255,.5)' : ''
 						return <Tile
 							key={an}
 							id={an}
@@ -34,7 +34,7 @@ export const GameBoard = ({rowSize,colSize,pieces,legalTiles,handleDragStart,han
 							onDragOver={handleDragOver}
 							onDrop={handleDrop}
 							backgroundColor={backgroundColor}
-							locked={backgroundColor}
+							//locked={backgroundColor}
 						>
 							{	gamePieces[an] ?
 								<Piece
@@ -80,14 +80,12 @@ export const SideBoard = ({rowSize,colSize,sidePieces,legalTiles,handleDragStart
 				{    row.map((col,colIndex)=>{
 						const an = `${num2Alpha(colIndex)}${rowSize-rowIndex}`
 						const color = gamePieces[an] ? gamePieces[an].COLOR : ''
-						const backgroundColor = legalTiles && legalTiles.indexOf(an) > -1 ? 'rgba(255,235,59,.1)' : ''
 						return <Tile
 							key={an}
 							id={an}
 							data-tile={JSON.stringify({an,piece:gamePieces[an]})}
 							onDragOver={handleDragOver}
 							onDrop={handleDrop}
-							backgroundColor={backgroundColor}
 						>
 							{	gamePieces[an] ?
 								<Piece
